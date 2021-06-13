@@ -36,21 +36,21 @@ const users = [{
 }];
 
 //routing code start here
-app.get("/login", (req, res) => {
+app.get("/login", isLoggedIn, (req, res) => {
   res.render("login.ejs");
 });
 
-app.post('/login', passport.authenticate('local', {
+app.post('/login', isLoggedIn, passport.authenticate('local', {
   successRedirect: '/',
   failureRedirect: '/login',
   failureFlash: true
 }))
 
-app.get("/register", (req, res) => {
+app.get("/register", isLoggedIn, (req, res) => {
   res.render("register.ejs");
 });
 
-app.post("/register", async (req, res) => {
+app.post("/register", isLoggedIn, async (req, res) => {
     try {
             const { username, email, password } = req.body;
             const hashedPassword = await bcrypt.hash(password, 7);
@@ -77,6 +77,12 @@ app.get("*", (req, res) => {
   res.send("invalid PATH request");
 });
 //routing code ends here
+function isLoggedIn(req, res, next){
+  if(req.isAuthenticated()){
+    return res.redirect('/');
+  }
+  next();
+}
 
 app.listen(3000, () => {
   console.log("serving on port 3000!!");
