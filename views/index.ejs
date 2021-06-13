@@ -1,9 +1,11 @@
-<h1>Welcome Back, <%= username %>! </h1>
+<h1>Welcome home, <%= username %>!</h1>
 
-<form action="/login" method="GET">
-    <button type="submit">login</button>
+<form action=<%= isLoggedIn?'/logout?_method=DELETE':'/login'%>
+method=<%= isLoggedIn?'POST':'GET'%>
+>
+  <button type="submit"><%= isLoggedIn?'Log Out':'login'%></button>
 </form>
 
 <form action="/register" method="GET">
-    <button type="submit">register</button>
+  <button type="submit">register</button>
 </form>

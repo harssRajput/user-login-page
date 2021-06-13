@@ -9,6 +9,8 @@ const bcrypt = require("bcrypt");
 const passport = require('passport');
 const flash = require('express-flash');
 const session = require('express-session');
+const methodOverride = require('method-override');
+
 
 const intializePassport = require('./passport-config');
 intializePassport(passport,
@@ -27,6 +29,7 @@ app.use(session({
 }))
 app.use(passport.initialize());
 app.use(passport.session())
+app.use(methodOverride('_method'));
 
 const users = [{
   id: '1623592329331',
@@ -67,10 +70,16 @@ app.post("/register", isLoggedIn, async (req, res) => {
     console.log("users fake database-> ", users);
 });
 
+app.delete('/logout', (req, res) => {
+  req.logOut();
+  res.redirect('/');
+})
+
 app.get("/", (req, res) => {
   const{user={}} = req;
   const {username='Anonymous'} = user;
-  res.render("index.ejs", {username});
+  let isLoggedIn = (username === 'Anonymous'? false: true)
+  res.render("index.ejs", {username, isLoggedIn: isLoggedIn});
 });
 
 app.get("*", (req, res) => {
