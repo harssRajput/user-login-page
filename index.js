@@ -1,18 +1,50 @@
+if(process.env.NODE_ENV !== 'production'){
+  require('dotenv').config()
+}
+
 const express = require("express");
 const app = express();
 const path = require("path");
 const bcrypt = require("bcrypt");
+const passport = require('passport');
+const flash = require('express-flash');
+const session = require('express-session');
+
+const intializePassport = require('./passport-config');
+intializePassport(passport,
+  email => users.find( user => user.email === email),
+  id => users.find( user => user.id === id)
+);
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view-engine", "ejs");
 app.use(express.urlencoded({ extended: false }));
+app.use(flash());
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave:false,
+  saveUninitialized: false
+}))
+app.use(passport.initialize());
+app.use(passport.session())
 
-const users = [];
+const users = [{
+  id: '1623592329331',
+  username: 'w',
+  email: 'w@w',
+  password: '$2b$07$tmefwO4BacnWliDDOTg.Yu3INDnc0w5UR1GIWJJEbo1ZWJZ838OZ6'
+}];
 
 //routing code start here
 app.get("/login", (req, res) => {
   res.render("login.ejs");
 });
+
+app.post('/login', passport.authenticate('local', {
+  successRedirect: '/',
+  failureRedirect: '/login',
+  failureFlash: true
+}))
 
 app.get("/register", (req, res) => {
   res.render("register.ejs");
@@ -23,6 +55,7 @@ app.post("/register", async (req, res) => {
             const { username, email, password } = req.body;
             const hashedPassword = await bcrypt.hash(password, 7);
             users.push({
+                id: Date.now().toString(),
                 username,
                 email,
                 password: hashedPassword,
@@ -35,7 +68,9 @@ app.post("/register", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.render("index.ejs", { username: "anonymous" });
+  const{user={}} = req;
+  const {username='Anonymous'} = user;
+  res.render("index.ejs", {username});
 });
 
 app.get("*", (req, res) => {
