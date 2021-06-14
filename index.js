@@ -14,17 +14,21 @@ const mongoose = require("mongoose");
 mongoose.connect("mongodb://localhost:27017/userLogin", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+  useCreateIndex:true
 });
-
-const kitty = new Cat({ name: "Zildjian" });
-kitty.save().then(() => console.log("meow"));
+const db=mongoose.connection;
+db.on('error', console.error.toString.bind(console, 'MongoDB connection error:'));
 
 const intializePassport = require("./passport-config");
 intializePassport(
   passport,
-  (email) => users.find((user) => user.email === email),
-  (id) => users.find((user) => user.id === id)
+  async (email) => await User.findOne({email : email}),
+  async (id) => await User.findById({_id: id})
+  // (email) => users.find((user) => user.email === email),
+  // (id) => users.find((user) => user.id === id)
 );
+
+const User = require('./models/user');
 
 app.set("views", path.join(__dirname, "views"));
 app.set("view-engine", "ejs");
@@ -73,17 +77,35 @@ app.post("/register", isLoggedIn, async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 7);
-    users.push({
-      id: Date.now().toString(),
+    // users.push({
+    //   id: Date.now().toString(),
+    //   username,
+    //   email,
+    //   password: hashedPassword,
+    // });
+    const user = new User({
       username,
       email,
       password: hashedPassword,
     });
-    res.redirect("/login");
+
+    user.save()
+      .then(user => {
+        // console.log('successfully added in database');
+        res.redirect("/login");
+      })
+      .catch(err => {
+        res.json({
+          message: 'An error occured'
+        })
+      })
+
+      // let allUsers = await User.find();
+      // console.log('users on mongodb ->', allUsers);
+
   } catch {
     res.redirect("/register");
   }
-  console.log("users fake database-> ", users);
 });
 
 app.delete("/logout", (req, res) => {
@@ -93,6 +115,7 @@ app.delete("/logout", (req, res) => {
 
 app.get("/", (req, res) => {
   const { user = {} } = req;
+  // console.log('req.user->', req);
   const { username = "Anonymous" } = user;
   let isLoggedIn = username === "Anonymous" ? false : true;
   res.render("index.ejs", { username, isLoggedIn: isLoggedIn });
