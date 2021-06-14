@@ -1,5 +1,9 @@
 <h1>Welcome home, <i><%= username %>!</i></h1>
 
+<% if(messages.info) { %>
+  <%= messages.info %>
+<% } %>
+
 <form action=<%= isLoggedIn?'/logout?_method=DELETE':'/login'%>
 method=<%= isLoggedIn?'POST':'GET'%>
 >

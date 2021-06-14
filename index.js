@@ -45,15 +45,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(methodOverride("_method"));
 
-const users = [
-  {
-    id: "1623592329331",
-    username: "w",
-    email: "w@w",
-    password: "$2b$07$tmefwO4BacnWliDDOTg.Yu3INDnc0w5UR1GIWJJEbo1ZWJZ838OZ6",
-  },
-];
-
 //routing code start here
 app.get("/login", isLoggedIn, (req, res) => {
   res.render("login.ejs");
@@ -77,32 +68,22 @@ app.post("/register", isLoggedIn, isValid, async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 7);
-    // users.push({
-    //   id: Date.now().toString(),
-    //   username,
-    //   email,
-    //   password: hashedPassword,
-    // });
+
     const user = new User({
       username,
       email,
       password: hashedPassword,
     });
-
     user.save()
       .then(user => {
         // console.log('successfully added in database');
+        req.flash('info', 'Registered Successfully!!');
         res.redirect("/login");
       })
       .catch(err => {
-        res.json({
-          message: 'An error occured'
-        })
+        req.flash('error', 'Something went wrong :(');
+        res.redirect("/register");
       })
-
-      // let allUsers = await User.find();
-      // console.log('users on mongodb ->', allUsers);
-
   } catch {
     res.redirect("/register");
   }
@@ -115,20 +96,20 @@ app.delete("/logout", (req, res) => {
 
 app.get("/", (req, res) => {
   const { user = {} } = req;
-  // console.log('req.user->', req);
   const { username = "Anonymous" } = user;
   let isLoggedIn = username === "Anonymous" ? false : true;
   res.render("index.ejs", { username, isLoggedIn: isLoggedIn });
 });
 
 app.get("*", (req, res) => {
-  res.send("invalid PATH request");
+  res.send("404 NOT FOUND!!, invalid PATH request :(");
 });
 //routing code ends here
 
 //middlewares
 function isLoggedIn(req, res, next) {
   if (req.isAuthenticated()) {
+    req.flash('info', 'you already logged in');
     return res.redirect("/");
   }
   next();
@@ -139,7 +120,7 @@ async function isValid(req, res, next){
   
   const user = await User.findOne({$or : [{username}, {email}]});
   if(user) {
-    console.log('user with same username or email already exist');
+    req.flash('info', 'username or email already exist');
     return res.redirect('/register');
   }
   next();
