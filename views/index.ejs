@@ -1,4 +1,4 @@
-<h1>Welcome home, <%= username %>!</h1>
+<h1>Welcome home, <i><%= username %>!</i></h1>
 
 <form action=<%= isLoggedIn?'/logout?_method=DELETE':'/login'%>
 method=<%= isLoggedIn?'POST':'GET'%>

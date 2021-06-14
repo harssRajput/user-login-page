@@ -73,7 +73,7 @@ app.get("/register", isLoggedIn, (req, res) => {
   res.render("register.ejs");
 });
 
-app.post("/register", isLoggedIn, async (req, res) => {
+app.post("/register", isLoggedIn, isValid, async (req, res) => {
   try {
     const { username, email, password } = req.body;
     const hashedPassword = await bcrypt.hash(password, 7);
@@ -125,9 +125,22 @@ app.get("*", (req, res) => {
   res.send("invalid PATH request");
 });
 //routing code ends here
+
+//middlewares
 function isLoggedIn(req, res, next) {
   if (req.isAuthenticated()) {
     return res.redirect("/");
+  }
+  next();
+}
+
+async function isValid(req, res, next){
+  const { username, email } = req.body;
+  
+  const user = await User.findOne({$or : [{username}, {email}]});
+  if(user) {
+    console.log('user with same username or email already exist');
+    return res.redirect('/register');
   }
   next();
 }
