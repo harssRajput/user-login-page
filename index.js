@@ -24,8 +24,6 @@ intializePassport(
   passport,
   async (email) => await User.findOne({email : email}),
   async (id) => await User.findById({_id: id})
-  // (email) => users.find((user) => user.email === email),
-  // (id) => users.find((user) => user.id === id)
 );
 
 const User = require('./models/user');
@@ -76,7 +74,6 @@ app.post("/register", isLoggedIn, isValid, async (req, res) => {
     });
     user.save()
       .then(user => {
-        // console.log('successfully added in database');
         req.flash('info', 'Registered Successfully!!');
         res.redirect("/login");
       })
