@@ -11,7 +11,8 @@ const flash = require("express-flash");
 const session = require("express-session");
 const methodOverride = require("method-override");
 const mongoose = require("mongoose");
-mongoose.connect("mongodb://localhost:27017/userLogin", {
+const dbUrl = process.env.DB_URL || "mongodb://localhost:27017/userLogin";
+mongoose.connect(dbUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex:true
